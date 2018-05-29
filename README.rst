@@ -1,29 +1,29 @@
-.. image:: https://img.shields.io/travis/giampaolo/zeroconf/master.svg?maxAge=3600&label=Linux%20/%20OSX
-    :target: https://travis-ci.org/giampaolo/zeroconf
+.. image:: https://img.shields.io/travis/giampaolo/zerocopy/master.svg?maxAge=3600&label=Linux%20/%20OSX
+    :target: https://travis-ci.org/giampaolo/zerocopy
     :alt: Linux and OSX tests (Travis)
 
-.. image:: https://img.shields.io/appveyor/ci/giampaolo/zeroconf/master.svg?maxAge=3600&label=Windows
-    :target: https://ci.appveyor.com/project/giampaolo/zeroconf
+.. image:: https://img.shields.io/appveyor/ci/giampaolo/zerocopy/master.svg?maxAge=3600&label=Windows
+    :target: https://ci.appveyor.com/project/giampaolo/zerocopy
     :alt: Windows tests (Appveyor)
 
-.. image:: https://coveralls.io/repos/github/giampaolo/zeroconf/badge.svg?branch=master
-    :target: https://coveralls.io/github/giampaolo/zeroconf?branch=master
+.. image:: https://coveralls.io/repos/github/giampaolo/zerocopy/badge.svg?branch=master
+    :target: https://coveralls.io/github/giampaolo/zerocopy?branch=master
     :alt: Test coverage (coverall.io)
 
-.. image:: https://readthedocs.org/projects/zeroconf/badge/?version=latest
-    :target: http://zeroconf.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/zerocopy/badge/?version=latest
+    :target: http://zerocopy.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. image:: https://img.shields.io/pypi/v/zeroconf.svg?label=pypi
-    :target: https://pypi.org/project/zeroconf
+.. image:: https://img.shields.io/pypi/v/zerocopy.svg?label=pypi
+    :target: https://pypi.org/project/zerocopy
     :alt: Latest version
 
-.. image:: https://img.shields.io/github/stars/giampaolo/zeroconf.svg
-    :target: https://github.com/giampaolo/zeroconf/
+.. image:: https://img.shields.io/github/stars/giampaolo/zerocopy.svg
+    :target: https://github.com/giampaolo/zerocopy/
     :alt: Github stars
 
-.. image:: https://img.shields.io/pypi/l/zeroconf.svg
-    :target: https://pypi.org/project/zeroconf
+.. image:: https://img.shields.io/pypi/l/zerocopy.svg
+    :target: https://pypi.org/project/zerocopy
     :alt: License
 
 About
