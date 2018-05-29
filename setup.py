@@ -13,6 +13,13 @@ with warnings.catch_warnings():
         setuptools = None
         from distutils.core import setup
 
+    if os.name == 'posix':
+        try:
+            from setuptools import Extension
+        except ImportError:
+            Extension = None
+
+
 if sys.version_info < (2, 6):
     sys.exit('python >= 2.6 only')
 
@@ -41,6 +48,11 @@ VERSION = get_version()
 
 
 def main():
+    if os.name != 'posix':
+        ext_modules = []
+    else:
+        ext_modules = [Extension('_zerocopy', ['zerocopy/_zerocopymodule.c'])]
+
     setup(
         name='zerocopy',
         version=VERSION,
@@ -52,7 +64,7 @@ def main():
         author="Giampaolo Rodola'",
         author_email='g.rodola@gmail.com',
         url='https://github.com/giampaolo/zerocopy',
-        py_modules=['confix'],
+        ext_modules=ext_modules,
         keywords=['zerocopy', 'sendfile', 'copyfile'],
         classifiers=[
             'Development Status :: 4 - Beta',
