@@ -90,6 +90,7 @@ def safe_remove(path):
         if err.errno != errno.ENOENT:
             raise
 
+
 def supports_file2file_sendfile():
     # ...apparently Linux and Solaris are the only ones
     if not hasattr(_zerocopy, "sendfile"):
@@ -121,9 +122,11 @@ def supports_file2file_sendfile():
 
 SUPPORTS_SENDFILE = supports_file2file_sendfile()
 
+
 # =====================================================================
 # --- copyfiles() tests
 # =====================================================================
+
 
 class _ZeroCopyFileTest(object):
     """Tests common to all zero-copy APIs."""

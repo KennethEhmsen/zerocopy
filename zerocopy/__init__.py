@@ -3,8 +3,6 @@ import shutil
 import stat
 import errno
 
-import six
-
 import _zerocopy
 
 __version__ = "0.1.0"
@@ -27,12 +25,14 @@ else:
         """Raised when trying to do a kind of operation (e.g. copying)
         which is not supported on a special file (e.g. a named pipe)"""
 
+
 if hasattr(shutil, "SameFileError"):
     class SameFileError(shutil.SameFileError):
         __doc__ = shutil.SameFileError.__doc__
 else:
     class SameFileError(shutil.Error):
         """Raised when source and destination are the same file."""
+
 
 class _GiveupOnZeroCopy(Exception):
     """Raised as a signal to fallback on using raw file copy
@@ -52,9 +52,11 @@ def _samefile(src, dst):
     return (os.path.normcase(os.path.abspath(src)) ==
             os.path.normcase(os.path.abspath(dst)))
 
+
 # =====================================================================
 # --- Implementation
 # =====================================================================
+
 
 def _zerocopy_osx(fsrc, fdst):
     """Copy 2 regular mmap-like files by using high-performance
@@ -125,6 +127,7 @@ def _zerocopy_sendfile(fsrc, fdst):
             if sent == 0:
                 break  # EOF
             offset += sent
+
 
 def _copyfileobj2(fsrc, fdst):
     """Copy 2 regular mmap-like fds by using zero-copy sendfile(2)
