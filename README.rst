@@ -31,12 +31,22 @@ About
 
 zerocopy is a Python library which provides a more efficient way for copying
 files in Python, speeding up `shutil.copy*` functions considerably.
+In this early stage it starts as a backport of https://bugs.python.org/issue33671
+for Python 2.7. Future development will probably include a backport of
+`socket.sendfile()` https://bugs.python.org/issue17552.
+
+What we have now
+================
+
 Copy file:
 
 .. code-block:: python
 
     >>> import zerocopy
     >>> zerocopy.copy('src', 'dst')
+
+What we may have tomorrow
+=========================
 
 Patch shutil module (all `copy*` functions):
 
@@ -46,3 +56,43 @@ Patch shutil module (all `copy*` functions):
     >>> zerocopy.patch_shutil()
     >>> import shutil
     >>> shutil.copy('src', 'dst')  # uses fastest version
+
+Efficiently send file over socket (also on Windows via `TransmitFile`):
+
+.. code-block:: python
+
+    >>> import zerocopy, socket
+    >>> sock = socket.create_connection(("127.0.0.1", 8000))
+    >>> file = open('somefile', 'rb')
+    >>> zerocopy.sendfile(sock, file)
+
+Instantaneous CoW (Copy on Write) copy on filesystems supporting it:
+
+.. code-block:: python
+
+    >>> import zerocopy
+    >>> zerocopy.cowcopy('src', 'dst')
+
+Expose zero-copy low-level syscalls (...with `zerocopy` being the namespace
+for higher-level wrappers around them):
+
+.. code-block:: python
+
+    >>> import zerocopy.ext
+    >>> zerocopy.ext.sendfile
+    <built-in function sendfile>
+    >>> zerocopy.ext.copy_file_range  # Linux
+    <built-in function copy_file_range>
+    >>> zerocopy.ext.splice  # Linux
+    <built-in function splice>
+    >>> zerocopy.ext.tee  # Linux
+    <built-in function tee>
+    >>> zerocopy.ext.copyfile  # OSX
+    <built-in function copyfile>
+    >>> zerocopy.ext.fcopyfile  # OSX
+    <built-in function fcopyfile>
+    >>> zerocopy.ext.CopyFileW  # Windows
+    <built-in function CopyFileW>
+    >>> zerocopy.ext.TransmitFile  # Windows
+    <built-in function TransmitFile>
+
