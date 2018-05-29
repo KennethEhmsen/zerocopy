@@ -18,8 +18,11 @@ except ImportError:
         import mock  # NOQA - requires "pip install mock"
 
 import zerocopy
-import _zerocopy
 from zerocopy import _GiveupOnZeroCopy
+if os.name == 'posix':
+    import _zerocopy
+else:
+    _zerocopy = None
 
 
 TESTFN = "$testfile"

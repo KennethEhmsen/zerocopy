@@ -3,7 +3,11 @@ import shutil
 import stat
 import errno
 
-import _zerocopy
+if os.name == 'posix':
+    import _zerocopy
+else:
+    _zerocopy = None
+
 
 __version__ = "0.1.0"
 version_info = tuple([int(num) for num in __version__.split('.')])

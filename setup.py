@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import sys
 import warnings
 
 with warnings.catch_warnings():
@@ -19,11 +18,10 @@ with warnings.catch_warnings():
         except ImportError:
             Extension = None
 
-
-if sys.version_info < (2, 7):
-    sys.exit('python >= 2.7 only')
-
 HERE = os.path.abspath(os.path.dirname(__file__))
+
+# if sys.version_info < (2, 7):
+#     sys.exit('python >= 2.7 only')
 
 
 def get_version():
@@ -45,46 +43,44 @@ def get_description():
 
 
 VERSION = get_version()
+install_requires = ['six']
+if os.name == 'posix':
+    ext_modules = [Extension('_zerocopy', ['zerocopy/_zerocopymodule.c'])]
+else:
+    ext_modules = []
+    install_requires.append('pypiwin32')
 
 
-def main():
-    if os.name != 'posix':
-        ext_modules = []
-    else:
-        ext_modules = [Extension('_zerocopy', ['zerocopy/_zerocopymodule.c'])]
-
-    setup(
-        name='zerocopy',
-        version=VERSION,
-        description='Provides efficient zero-copy capabilities for '
-                    'shutil.copy* functions',
-        long_description=get_description(),
-        license='MIT',
-        platforms='Platform Independent',
-        author="Giampaolo Rodola'",
-        author_email='g.rodola@gmail.com',
-        url='https://github.com/giampaolo/zerocopy',
-        ext_modules=ext_modules,
-        install_requires=['six'],
-        keywords=['zerocopy', 'sendfile', 'copyfile'],
-        classifiers=[
-            'Development Status :: 4 - Beta',
-            'Intended Audience :: Developers',
-            'Intended Audience :: System Administrators',
-            'License :: OSI Approved :: MIT License',
-            'Operating System :: OS Independent',
-            'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 3',
-            'Programming Language :: Python',
-            'Topic :: Security',
-            'Topic :: Software Development :: Libraries :: Python Modules',
-            'Topic :: Software Development :: Libraries',
-            'Topic :: System :: Systems Administration',
-            'Topic :: System :: Filesystems',
-            'Topic :: Utilities',
-        ],
-    )
-
-
-if __name__ == '__main__':
-    main()
+setup(
+    name='zerocopy',
+    version=VERSION,
+    description='Provides efficient zero-copy capabilities for '
+                'shutil.copy* functions',
+    long_description=get_description(),
+    license='MIT',
+    platforms='Platform Independent',
+    author="Giampaolo Rodola'",
+    author_email='g.rodola@gmail.com',
+    url='https://github.com/giampaolo/zerocopy',
+    ext_modules=ext_modules,
+    install_requires=install_requires,
+    keywords=['zerocopy', 'sendfile', 'copyfile', 'fcopyfile', 'CopyFile',
+              'CopyFileEx', 'splice', 'copy_file_range', 'performance',
+              'fastcopy'],
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'Intended Audience :: System Administrators',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python',
+        'Topic :: Security',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: Software Development :: Libraries',
+        'Topic :: System :: Systems Administration',
+        'Topic :: System :: Filesystems',
+        'Topic :: Utilities',
+    ],
+)
