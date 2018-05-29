@@ -18,7 +18,10 @@ from zerocopy.test import write_file
 from zerocopy.test import write_test_file
 
 import zerocopy
-from zerocopy import _GiveupOnZeroCopy
+from zerocopy._copyfile import _GiveupOnZeroCopy
+from zerocopy._copyfile import _zerocopy_osx
+from zerocopy._copyfile import _zerocopy_sendfile
+from zerocopy._copyfile import _zerocopy_win
 if os.name == 'posix':
     import _zerocopy
 else:
@@ -171,7 +174,7 @@ class TestZeroCopySendfile(_ZeroCopyFileTest, unittest.TestCase):
     PATCHPOINT = "_zerocopy.sendfile"
 
     def zerocopy_fun(self, *args, **kwargs):
-        return zerocopy._zerocopy_sendfile(*args, **kwargs)
+        return _zerocopy_sendfile(*args, **kwargs)
 
     def test_exception_on_second_call(self):
         def sendfile(*args, **kwargs):
@@ -187,7 +190,7 @@ class TestZeroCopySendfile(_ZeroCopyFileTest, unittest.TestCase):
                         side_effect=sendfile):
             with self.get_files() as (src, dst):
                 with self.assertRaises(OSError) as cm:
-                    zerocopy._zerocopy_sendfile(src, dst)
+                    _zerocopy_sendfile(src, dst)
         assert flag
         self.assertEqual(cm.exception.errno, errno.EBADF)
 
@@ -197,7 +200,7 @@ class TestZeroCopySendfile(_ZeroCopyFileTest, unittest.TestCase):
         # sendfile() will be called repeatedly.
         with mock.patch('os.fstat', side_effect=OSError) as m:
             with self.get_files() as (src, dst):
-                zerocopy._zerocopy_sendfile(src, dst)
+                _zerocopy_sendfile(src, dst)
                 assert m.called
         self.assertEqual(read_file(TESTFN2, binary=True), self.FILEDATA)
 
@@ -210,7 +213,7 @@ class TestZeroCopySendfile(_ZeroCopyFileTest, unittest.TestCase):
         mock_.st_size = 65536 + 1
         with mock.patch('os.fstat', return_value=mock_) as m:
             with self.get_files() as (src, dst):
-                zerocopy._zerocopy_sendfile(src, dst)
+                _zerocopy_sendfile(src, dst)
                 assert m.called
         self.assertEqual(read_file(TESTFN2, binary=True), self.FILEDATA)
 
@@ -223,7 +226,7 @@ class TestZeroCopySendfile(_ZeroCopyFileTest, unittest.TestCase):
         mock_.st_size = self.FILESIZE + (100 * 1024 * 1024)
         with mock.patch('os.fstat', return_value=mock_) as m:
             with self.get_files() as (src, dst):
-                zerocopy._zerocopy_sendfile(src, dst)
+                _zerocopy_sendfile(src, dst)
                 assert m.called
         self.assertEqual(read_file(TESTFN2, binary=True), self.FILEDATA)
 
@@ -251,15 +254,15 @@ class TestZeroCopyOSX(_ZeroCopyFileTest, unittest.TestCase):
     PATCHPOINT = "_zerocopy.fcopyfile"
 
     def zerocopy_fun(self, *args, **kwargs):
-        return zerocopy._zerocopy_osx(*args, **kwargs)
+        return _zerocopy_osx(*args, **kwargs)
 
 
 @unittest.skipIf(not WINDOWS, 'Windows only')
 class TestZeroCopyWindows(_ZeroCopyFileTest, unittest.TestCase):
-    PATCHPOINT = "zerocopy._win32file.CopyFileW"
+    PATCHPOINT = "zerocopy._copyfile.win32file.CopyFileW"
 
     def zerocopy_fun(self, src, dst):
-        return zerocopy._zerocopy_win(src.name, dst.name)
+        return _zerocopy_win(src.name, dst.name)
 
 
 if __name__ == '__main__':
