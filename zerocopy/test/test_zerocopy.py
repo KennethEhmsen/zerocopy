@@ -18,6 +18,7 @@ except ImportError:
         import mock  # NOQA - requires "pip install mock"
 
 import zerocopy
+import _zerocopy
 from zerocopy import _GiveupOnZeroCopy
 
 
@@ -91,7 +92,7 @@ def safe_remove(path):
 
 def supports_file2file_sendfile():
     # ...apparently Linux and Solaris are the only ones
-    if not hasattr(os, "sendfile"):
+    if not hasattr(_zerocopy, "sendfile"):
         return False
     srcname = None
     dstname = None
@@ -106,7 +107,7 @@ def supports_file2file_sendfile():
                 infd = src.fileno()
                 outfd = dst.fileno()
                 try:
-                    os.sendfile(outfd, infd, 0, 2)
+                    _zerocopy.sendfile(outfd, infd, 0, 2)
                 except OSError:
                     return False
                 else:
@@ -227,9 +228,9 @@ class _ZeroCopyFileTest(object):
                 self.assertRaises(OSError, self.zerocopy_fun, src, dst)
 
 
-@unittest.skipIf(not SUPPORTS_SENDFILE, 'os.sendfile() not supported')
+@unittest.skipIf(not SUPPORTS_SENDFILE, 'sendfile() not supported')
 class TestZeroCopySendfile(_ZeroCopyFileTest, unittest.TestCase):
-    PATCHPOINT = "os.sendfile"
+    PATCHPOINT = "_zerocopy.sendfile"
 
     def zerocopy_fun(self, *args, **kwargs):
         return zerocopy._zerocopy_sendfile(*args, **kwargs)
@@ -243,8 +244,8 @@ class TestZeroCopySendfile(_ZeroCopyFileTest, unittest.TestCase):
                 raise OSError(errno.EBADF, "yo")
 
         flag = []
-        orig_sendfile = os.sendfile
-        with mock.patch('os.sendfile', create=True,
+        orig_sendfile = _zerocopy.sendfile
+        with mock.patch('_zerocopy.sendfile', create=True,
                         side_effect=sendfile):
             with self.get_files() as (src, dst):
                 with self.assertRaises(OSError) as cm:
@@ -267,9 +268,9 @@ class TestZeroCopySendfile(_ZeroCopyFileTest, unittest.TestCase):
         # actual file size. We want to force sendfile() to be called
         # multiple times, also in order to emulate a src fd which gets
         # bigger while it is being copied.
-        mock = unittest.mock.Mock()
-        mock.st_size = 65536 + 1
-        with mock.patch('os.fstat', return_value=mock) as m:
+        mock_ = mock.Mock()
+        mock_.st_size = 65536 + 1
+        with mock.patch('os.fstat', return_value=mock_) as m:
             with self.get_files() as (src, dst):
                 zerocopy._zerocopy_sendfile(src, dst)
                 assert m.called
@@ -280,16 +281,16 @@ class TestZeroCopySendfile(_ZeroCopyFileTest, unittest.TestCase):
         # the actual file size. Make sure sendfile() does not rely on
         # file size value except for (maybe) a better throughput /
         # performance.
-        mock = unittest.mock.Mock()
-        mock.st_size = self.FILESIZE + (100 * 1024 * 1024)
-        with mock.patch('os.fstat', return_value=mock) as m:
+        mock_ = mock.Mock()
+        mock_.st_size = self.FILESIZE + (100 * 1024 * 1024)
+        with mock.patch('os.fstat', return_value=mock_) as m:
             with self.get_files() as (src, dst):
                 zerocopy._zerocopy_sendfile(src, dst)
                 assert m.called
         self.assertEqual(read_file(TESTFN2, binary=True), self.FILEDATA)
 
     def test_blocksize_arg(self):
-        with mock.patch('os.sendfile',
+        with mock.patch('_zerocopy.sendfile',
                         side_effect=ZeroDivisionError) as m:
             self.assertRaises(ZeroDivisionError,
                               zerocopy.copyfile, TESTFN, TESTFN2)
