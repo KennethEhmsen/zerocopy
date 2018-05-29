@@ -44,9 +44,6 @@ DEPS = [
     "pypiwin32==219" if sys.version_info[:2] <= (3, 4) else "pypiwin32",
     "pyreadline",
     "setuptools",
-    "wheel",
-    "wmi",
-    "requests"
 ]
 if sys.version_info[:2] <= (2, 6):
     DEPS.append('unittest2')

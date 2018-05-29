@@ -1,18 +1,22 @@
+import errno
 import os
 import shutil
 import stat
-import errno
+import sys
 
 if os.name == 'posix':
     import _zerocopy
 else:
     _zerocopy = None
-
+    import win32file as _win32file
+    import pywintypes as _pywintypes
 
 __version__ = "0.1.0"
 version_info = tuple([int(num) for num in __version__.split('.')])
 _HAS_SENDFILE = hasattr(_zerocopy, "sendfile")
 _HAS_FCOPYFILE = hasattr(_zerocopy, "fcopyfile")
+_HAS_WIN32_COPYFILE = os.name == 'nt'
+_PY3 = sys.version_info[0] == 3
 __all__ = [
     "SpecialFileError", "SameFileError"
     "copyfile"]
@@ -82,7 +86,15 @@ def _zerocopy_osx(fsrc, fdst):
 
 
 def _zerocopy_win(src, dst):
-    raise NotImplementedError  # TODO
+    try:
+        _win32file.CopyFileW(src, dst, 0)
+    except _pywintypes.error as err:
+        if err.winerror == errno.ENOENT and not _PY3:
+            raise IOError(err.winerror, err.strerror)
+        if not _PY3:
+            raise OSError(err.winerror, err.strerror)
+        else:
+            raise OSError(err.winerror, err.strerror, src)
 
 
 def _zerocopy_sendfile(fsrc, fdst):
@@ -191,7 +203,7 @@ def copyfile(src, dst, follow_symlinks=True):
     if not follow_symlinks and os.path.islink(src):
         os.symlink(os.readlink(src), dst)
     else:
-        if os.name == 'nt':
+        if _HAS_WIN32_COPYFILE:
             _zerocopy_win(src, dst)
             return dst
 

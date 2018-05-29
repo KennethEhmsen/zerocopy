@@ -28,6 +28,7 @@ else:
 TESTFN = "$testfile"
 TESTFN2 = TESTFN + "2"
 OSX = sys.platform.startswith("darwin")
+PY3 = sys.version_info[0] == 3
 
 
 # =====================================================================
@@ -192,7 +193,8 @@ class _ZeroCopyFileTest(object):
         with self.assertRaises(IOError) as cm:
             zerocopy.copyfile(name, "new")
         self.assertEqual(cm.exception.errno, errno.ENOENT)
-        self.assertEqual(cm.exception.filename, name)
+        if PY3:
+            self.assertEqual(cm.exception.filename, name)
 
     def test_empty_file(self):
         srcname = TESTFN + 'src'
@@ -320,6 +322,14 @@ class TestZeroCopyOSX(_ZeroCopyFileTest, unittest.TestCase):
 
     def zerocopy_fun(self, *args, **kwargs):
         return zerocopy._zerocopy_osx(*args, **kwargs)
+
+
+@unittest.skipIf(not os.name == 'nt', 'Windows only')
+class TestZeroCopyWindows(_ZeroCopyFileTest, unittest.TestCase):
+    PATCHPOINT = "zerocopy._win32file.CopyFileW"
+
+    def zerocopy_fun(self, src, dst):
+        return zerocopy._zerocopy_win(src.name, dst.name)
 
 
 if __name__ == '__main__':
