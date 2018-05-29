@@ -22,6 +22,7 @@ from zerocopy._copyfile import _GiveupOnZeroCopy
 from zerocopy._copyfile import _zerocopy_osx
 from zerocopy._copyfile import _zerocopy_sendfile
 from zerocopy._copyfile import _zerocopy_win
+
 if os.name == 'posix':
     import _zerocopy
 else:
