@@ -26,6 +26,12 @@
 #include <stdlib.h>
 
 
+/*
+ * ====================================================================
+ * POSIX sendfile(2)
+ * ====================================================================
+ */
+
 static int
 _parse_off_t(PyObject* arg, void* addr)
 {
@@ -274,6 +280,35 @@ method_sendfile(PyObject *self, PyObject *args, PyObject *kwdict)
 #else
 #endif
 
+/*
+ * ====================================================================
+ * OSX fcopyfile(2)
+ * ====================================================================
+ */
+
+#if defined(__APPLE__)
+#include <copyfile.h>
+
+static PyObject *
+method_fcopyfile(PyObject *self, PyObject *args, PyObject *kwdict)
+{
+    int ret;
+    int infd;
+    int outfd;
+
+    if (!PyArg_ParseTuple(args, "ii", &infd, &outfd))
+        return NULL;
+
+    Py_BEGIN_ALLOW_THREADS
+    ret = fcopyfile(infd, outfd, NULL, COPYFILE_DATA);
+    Py_END_ALLOW_THREADS
+    if (ret < 0)
+        return PyErr_SetFromErrno(PyExc_OSError);
+    Py_RETURN_NONE;
+}
+#endif
+
+
 /* --- module initialization --- */
 
 struct module_state {
@@ -304,6 +339,10 @@ static PyMethodDef zerocopy_methods[] = {
      "out must be the file descriptor of an open socket.\n"
      "flags argument is only supported on FreeBSD.\n"
     },
+#if defined(__APPLE__)
+    {"fcopyfile", (PyCFunction)method_fcopyfile, METH_VARARGS | METH_KEYWORDS,
+     "Efficiently copy data between 2 fds (OSX)"},
+#endif
     {NULL, NULL}
 };
 

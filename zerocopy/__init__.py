@@ -11,7 +11,6 @@ __version__ = "0.1.0"
 version_info = tuple([int(num) for num in __version__.split('.')])
 _HAS_SENDFILE = hasattr(_zerocopy, "sendfile")
 _HAS_FCOPYFILE = hasattr(_zerocopy, "fcopyfile")
-
 __all__ = [
     "SpecialFileError", "SameFileError"
     "copyfile"]
@@ -58,7 +57,22 @@ def _samefile(src, dst):
 # =====================================================================
 
 def _zerocopy_osx(fsrc, fdst):
-    raise NotImplementedError  # TODO
+    """Copy 2 regular mmap-like files by using high-performance
+    fcopyfile() syscall (OSX only).
+    """
+    try:
+        infd = fsrc.fileno()
+        outfd = fdst.fileno()
+    except Exception as err:
+        raise _GiveupOnZeroCopy(err)  # not a regular file
+
+    try:
+        _zerocopy.fcopyfile(infd, outfd)
+    except OSError as err:
+        if err.errno in {errno.EINVAL, errno.ENOTSUP}:
+            raise _GiveupOnZeroCopy(err)
+        else:
+            raise  # six.raise_from(err, None)
 
 
 def _zerocopy_win(src, dst):
@@ -100,13 +114,13 @@ def _zerocopy_sendfile(fsrc, fdst):
                 raise _GiveupOnZeroCopy(err)
 
             if err.errno == errno.ENOSPC:  # filesystem is full
-                six.raise_from(err, None)
+                raise  # six.raise_from(err, None)
 
             # Give up on first call and if no data was copied.
             if offset == 0 and os.lseek(outfd, 0, os.SEEK_CUR) == 0:
                 raise _GiveupOnZeroCopy(err)
 
-            six.raise_from(err, None)
+            raise  # six.raise_from(err, None)
         else:
             if sent == 0:
                 break  # EOF

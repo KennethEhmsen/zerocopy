@@ -3,9 +3,19 @@ import errno
 import io
 import os
 import random
+import shutil
 import string
+import sys
 import tempfile
 import unittest
+import warnings
+
+try:
+    from unittest import mock  # py3
+except ImportError:
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        import mock  # NOQA - requires "pip install mock"
 
 import zerocopy
 from zerocopy import _GiveupOnZeroCopy
@@ -13,6 +23,7 @@ from zerocopy import _GiveupOnZeroCopy
 
 TESTFN = "$testfile"
 TESTFN2 = TESTFN + "2"
+OSX = sys.platform.startswith("darwin")
 
 
 # =====================================================================
@@ -109,11 +120,9 @@ def supports_file2file_sendfile():
 
 SUPPORTS_SENDFILE = supports_file2file_sendfile()
 
-
 # =====================================================================
 # --- copyfiles() tests
 # =====================================================================
-
 
 class _ZeroCopyFileTest(object):
     """Tests common to all zero-copy APIs."""
@@ -157,7 +166,7 @@ class _ZeroCopyFileTest(object):
             with open(TESTFN2, "wb") as dst:
                 with self.assertRaises(_GiveupOnZeroCopy):
                     self.zerocopy_fun(src, dst)
-                zerocopy.copyfileobj(src, dst)
+                shutil.copyfileobj(src, dst)
 
         self.assertEqual(read_file(TESTFN2, binary=True), self.FILEDATA)
 
@@ -167,14 +176,15 @@ class _ZeroCopyFileTest(object):
             with io.BytesIO() as dst:
                 with self.assertRaises(_GiveupOnZeroCopy):
                     self.zerocopy_fun(src, dst)
-                zerocopy.copyfileobj(src, dst)
+                shutil.copyfileobj(src, dst)
                 dst.seek(0)
                 self.assertEqual(dst.read(), self.FILEDATA)
 
     def test_non_existent_src(self):
         name = tempfile.mktemp()
-        with self.assertRaises(FileNotFoundError) as cm:
+        with self.assertRaises(IOError) as cm:
             zerocopy.copyfile(name, "new")
+        self.assertEqual(cm.exception.errno, errno.ENOENT)
         self.assertEqual(cm.exception.filename, name)
 
     def test_empty_file(self):
@@ -192,8 +202,8 @@ class _ZeroCopyFileTest(object):
         self.assertEqual(read_file(dstname, binary=True), b"")
 
     def test_unhandled_exception(self):
-        with unittest.mock.patch(self.PATCHPOINT,
-                                 side_effect=ZeroDivisionError):
+        with mock.patch(self.PATCHPOINT,
+                        side_effect=ZeroDivisionError):
             self.assertRaises(ZeroDivisionError,
                               zerocopy.copyfile, TESTFN, TESTFN2)
 
@@ -202,8 +212,8 @@ class _ZeroCopyFileTest(object):
         # Emulate a case where the first call to the zero-copy
         # function raises an exception in which case the function is
         # supposed to give up immediately.
-        with unittest.mock.patch(self.PATCHPOINT,
-                                 side_effect=OSError(errno.EINVAL, "yo")):
+        with mock.patch(self.PATCHPOINT,
+                        side_effect=OSError(errno.EINVAL, "yo")):
             with self.get_files() as (src, dst):
                 with self.assertRaises(_GiveupOnZeroCopy):
                     self.zerocopy_fun(src, dst)
@@ -211,8 +221,8 @@ class _ZeroCopyFileTest(object):
     def test_filesystem_full(self):
         # Emulate a case where filesystem is full and sendfile() fails
         # on first call.
-        with unittest.mock.patch(self.PATCHPOINT,
-                                 side_effect=OSError(errno.ENOSPC, "yo")):
+        with mock.patch(self.PATCHPOINT,
+                        side_effect=OSError(errno.ENOSPC, "yo")):
             with self.get_files() as (src, dst):
                 self.assertRaises(OSError, self.zerocopy_fun, src, dst)
 
@@ -234,8 +244,8 @@ class TestZeroCopySendfile(_ZeroCopyFileTest, unittest.TestCase):
 
         flag = []
         orig_sendfile = os.sendfile
-        with unittest.mock.patch('os.sendfile', create=True,
-                                 side_effect=sendfile):
+        with mock.patch('os.sendfile', create=True,
+                        side_effect=sendfile):
             with self.get_files() as (src, dst):
                 with self.assertRaises(OSError) as cm:
                     zerocopy._zerocopy_sendfile(src, dst)
@@ -246,7 +256,7 @@ class TestZeroCopySendfile(_ZeroCopyFileTest, unittest.TestCase):
         # Emulate a case where src file size cannot be determined.
         # Internally bufsize will be set to a small value and
         # sendfile() will be called repeatedly.
-        with unittest.mock.patch('os.fstat', side_effect=OSError) as m:
+        with mock.patch('os.fstat', side_effect=OSError) as m:
             with self.get_files() as (src, dst):
                 zerocopy._zerocopy_sendfile(src, dst)
                 assert m.called
@@ -259,7 +269,7 @@ class TestZeroCopySendfile(_ZeroCopyFileTest, unittest.TestCase):
         # bigger while it is being copied.
         mock = unittest.mock.Mock()
         mock.st_size = 65536 + 1
-        with unittest.mock.patch('os.fstat', return_value=mock) as m:
+        with mock.patch('os.fstat', return_value=mock) as m:
             with self.get_files() as (src, dst):
                 zerocopy._zerocopy_sendfile(src, dst)
                 assert m.called
@@ -272,15 +282,15 @@ class TestZeroCopySendfile(_ZeroCopyFileTest, unittest.TestCase):
         # performance.
         mock = unittest.mock.Mock()
         mock.st_size = self.FILESIZE + (100 * 1024 * 1024)
-        with unittest.mock.patch('os.fstat', return_value=mock) as m:
+        with mock.patch('os.fstat', return_value=mock) as m:
             with self.get_files() as (src, dst):
                 zerocopy._zerocopy_sendfile(src, dst)
                 assert m.called
         self.assertEqual(read_file(TESTFN2, binary=True), self.FILEDATA)
 
     def test_blocksize_arg(self):
-        with unittest.mock.patch('os.sendfile',
-                                 side_effect=ZeroDivisionError) as m:
+        with mock.patch('os.sendfile',
+                        side_effect=ZeroDivisionError) as m:
             self.assertRaises(ZeroDivisionError,
                               zerocopy.copyfile, TESTFN, TESTFN2)
             blocksize = m.call_args[0][3]
@@ -295,6 +305,14 @@ class TestZeroCopySendfile(_ZeroCopyFileTest, unittest.TestCase):
                               zerocopy.copyfile, TESTFN2, TESTFN2 + '3')
             blocksize = m.call_args[0][3]
             self.assertEqual(blocksize, 2 ** 23)
+
+
+@unittest.skipIf(not OSX, 'OSX only')
+class TestZeroCopyOSX(_ZeroCopyFileTest, unittest.TestCase):
+    PATCHPOINT = "_zerocopy.fcopyfile"
+
+    def zerocopy_fun(self, *args, **kwargs):
+        return zerocopy._zerocopy_osx(*args, **kwargs)
 
 
 if __name__ == '__main__':
