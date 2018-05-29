@@ -20,8 +20,8 @@ with warnings.catch_warnings():
             Extension = None
 
 
-if sys.version_info < (2, 6):
-    sys.exit('python >= 2.6 only')
+if sys.version_info < (2, 7):
+    sys.exit('python >= 2.7 only')
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -74,8 +74,6 @@ def main():
             'License :: OSI Approved :: MIT License',
             'Operating System :: OS Independent',
             'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.6',
-            'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
             'Programming Language :: Python',
             'Topic :: Security',
