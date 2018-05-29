@@ -65,6 +65,7 @@ def main():
         author_email='g.rodola@gmail.com',
         url='https://github.com/giampaolo/zerocopy',
         ext_modules=ext_modules,
+        install_requires=['six'],
         keywords=['zerocopy', 'sendfile', 'copyfile'],
         classifiers=[
             'Development Status :: 4 - Beta',

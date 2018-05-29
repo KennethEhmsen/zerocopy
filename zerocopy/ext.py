@@ -1,3 +1,6 @@
 """Expose low level _zerocopy C extension module APIs."""
 
-from _zerocopy import *  # NOQA
+import os
+
+if os.name == 'posix':
+    from _zerocopy import *  # NOQA

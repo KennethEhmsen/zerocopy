@@ -25,6 +25,7 @@
 #include <Python.h>
 #include <stdlib.h>
 
+
 static int
 _parse_off_t(PyObject* arg, void* addr)
 {
@@ -271,12 +272,7 @@ method_sendfile(PyObject *self, PyObject *args, PyObject *kwdict)
     return Py_BuildValue("n", sent);
 }
 #else
-/* --- end SUN OS --- */
-
-#error platfom not supported
-
 #endif
-
 
 /* --- module initialization --- */
 
