@@ -1,0 +1,12 @@
+include *.bat
+include *.yml
+include .git-ignore
+include .git-pre-commit
+include LICENSE
+include Makefile
+include README
+recursive-include scripts *.py
+recursive-include zerocopy *.c
+recursive-include zerocopy *.h
+recursive-include zerocopy *.py
+recursive-include zerocopy/test *.py

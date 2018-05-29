@@ -29,7 +29,7 @@ if APPVEYOR:
     PYTHON = sys.executable
 else:
     PYTHON = os.getenv('PYTHON', sys.executable)
-TSCRIPT = os.getenv('TSCRIPT', 'zerocopy\\test\\test_zerocopy.py')
+TSCRIPT = os.getenv('TSCRIPT', 'zerocopy\\test\\__main__.py')
 GET_PIP_URL = "https://bootstrap.pypa.io/get-pip.py"
 PY3 = sys.version_info[0] == 3
 HERE = os.path.abspath(os.path.dirname(__file__))

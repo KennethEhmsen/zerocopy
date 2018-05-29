@@ -2,20 +2,20 @@ import contextlib
 import errno
 import io
 import os
-import random
 import shutil
-import string
-import sys
 import tempfile
 import unittest
-import warnings
 
-try:
-    from unittest import mock  # py3
-except ImportError:
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        import mock  # NOQA - requires "pip install mock"
+from zerocopy.test import mock
+from zerocopy.test import OSX
+from zerocopy.test import PY3
+from zerocopy.test import read_file
+from zerocopy.test import safe_remove
+from zerocopy.test import TESTFN
+from zerocopy.test import TESTFN2
+from zerocopy.test import WINDOWS
+from zerocopy.test import write_file
+from zerocopy.test import write_test_file
 
 import zerocopy
 from zerocopy import _GiveupOnZeroCopy
@@ -23,76 +23,6 @@ if os.name == 'posix':
     import _zerocopy
 else:
     _zerocopy = None
-
-
-TESTFN = "$testfile"
-TESTFN2 = TESTFN + "2"
-OSX = sys.platform.startswith("darwin")
-PY3 = sys.version_info[0] == 3
-
-
-# =====================================================================
-# --- utils
-# =====================================================================
-
-def write_file(path, content, binary=False):
-    """Write *content* to a file located at *path*.
-
-    If *path* is a tuple instead of a string, os.path.join will be used to
-    make a path.  If *binary* is true, the file will be opened in binary
-    mode.
-    """
-    if isinstance(path, tuple):
-        path = os.path.join(*path)
-    with open(path, 'wb' if binary else 'w') as fp:
-        fp.write(content)
-
-
-def write_test_file(path, size):
-    """Create a test file with an arbitrary size and random text content."""
-    def chunks(total, step):
-        assert total >= step
-        while total > step:
-            yield step
-            total -= step
-        if total:
-            yield total
-
-    bufsize = min(size, 8192)
-    chunk = b"".join([random.choice(string.ascii_letters).encode()
-                      for i in range(bufsize)])
-    with open(path, 'wb') as f:
-        for csize in chunks(size, bufsize):
-            f.write(chunk)
-    assert os.path.getsize(path) == size
-
-
-def read_file(path, binary=False):
-    """Return contents from a file located at *path*.
-
-    If *path* is a tuple instead of a string, os.path.join will be used to
-    make a path.  If *binary* is true, the file will be opened in binary
-    mode.
-    """
-    if isinstance(path, tuple):
-        path = os.path.join(*path)
-    with open(path, 'rb' if binary else 'r') as fp:
-        return fp.read()
-
-
-def assert_files_equal(src, dst):
-    with open(src, "rb") as a:
-        with open(dst, "rb") as b:
-            if a.read() != b.read():
-                raise AssertionError("%s and %s files are not equal")
-
-
-def safe_remove(path):
-    try:
-        os.remove(path)
-    except OSError as err:
-        if err.errno != errno.ENOENT:
-            raise
 
 
 def supports_file2file_sendfile():
@@ -324,7 +254,7 @@ class TestZeroCopyOSX(_ZeroCopyFileTest, unittest.TestCase):
         return zerocopy._zerocopy_osx(*args, **kwargs)
 
 
-@unittest.skipIf(not os.name == 'nt', 'Windows only')
+@unittest.skipIf(not WINDOWS, 'Windows only')
 class TestZeroCopyWindows(_ZeroCopyFileTest, unittest.TestCase):
     PATCHPOINT = "zerocopy._win32file.CopyFileW"
 

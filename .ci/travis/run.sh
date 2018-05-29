@@ -20,9 +20,9 @@ python setup.py develop
 
 # run tests (with coverage)
 if [[ $PYVER == '2.7' ]] && [[ "$(uname -s)" != 'Darwin' ]]; then
-    python -Wa -m coverage run zerocopy/test/test_zerocopy.py
+    python -Wa -m coverage run zerocopy/test/__main__.py
 else
-    python -Wa zerocopy/test/test_zerocopy.py
+    python -Wa zerocopy/test/__main__.py
 fi
 
 if [ "$PYVER" == "2.7" ] || [ "$PYVER" == "3.6" ]; then

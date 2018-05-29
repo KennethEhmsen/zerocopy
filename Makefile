@@ -3,7 +3,7 @@
 # You can set the variables below from the command line.
 
 PYTHON = python
-TSCRIPT = zerocopy/test/test_zerocopy.py
+TSCRIPT = zerocopy/test/__main__.py
 ARGS =
 # List of nice-to-have dev libs.
 DEPS = \
@@ -177,6 +177,9 @@ release:  ## Create a release (down/uploads tar.gz, wheels, git tag release).
 	${MAKE} pre-release
 	$(PYTHON) -m twine upload dist/*  # upload tar.gz and Windows wheels on PYPI
 	${MAKE} git-tag-release
+
+check-manifest:  ## Inspect MANIFEST.in file.
+	$(PYTHON) -m check_manifest -v $(ARGS)
 
 # ===================================================================
 # Misc

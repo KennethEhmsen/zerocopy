@@ -62,6 +62,7 @@ setup(
     author="Giampaolo Rodola'",
     author_email='g.rodola@gmail.com',
     url='https://github.com/giampaolo/zerocopy',
+    packages=["zerocopy", "zerocopy.test"],
     ext_modules=ext_modules,
     install_requires=install_requires,
     keywords=['zerocopy', 'sendfile', 'copyfile', 'fcopyfile', 'CopyFile',
